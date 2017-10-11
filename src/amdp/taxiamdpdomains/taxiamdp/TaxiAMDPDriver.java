@@ -1,6 +1,15 @@
 package amdp.taxiamdpdomains.taxiamdp;
 
-import amdp.amdpframework.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import amdp.amdpframework.AMDPAgent;
+import amdp.amdpframework.AMDPMetaController;
+import amdp.amdpframework.AMDPPolicyGenerator;
+import amdp.amdpframework.GroundedTask;
+import amdp.amdpframework.NonPrimitiveTaskNode;
+import amdp.amdpframework.TaskNode;
 import amdp.taxi.TaxiDomain;
 import amdp.taxi.TaxiRewardFunction;
 import amdp.taxi.TaxiTerminationFunction;
@@ -15,6 +24,7 @@ import amdp.taxiamdpdomains.testingtools.BoundedRTDPForTests;
 import amdp.taxiamdpdomains.testingtools.GreedyReplan;
 import amdp.taxiamdpdomains.testingtools.MutableGlobalInteger;
 import burlap.behavior.policy.Policy;
+import burlap.behavior.policy.PolicyUtils;
 import burlap.behavior.singleagent.Episode;
 import burlap.behavior.singleagent.auxiliary.EpisodeSequenceVisualizer;
 import burlap.behavior.valuefunction.ConstantValueFunction;
@@ -32,10 +42,6 @@ import burlap.mdp.singleagent.model.RewardFunction;
 import burlap.mdp.singleagent.oo.OOSADomain;
 import burlap.statehashing.simple.SimpleHashableStateFactory;
 import burlap.visualizer.Visualizer;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 /**
  * Created by ngopalan on 8/14/16.
@@ -92,10 +98,9 @@ public class TaxiAMDPDriver {
 
         TaxiDomain tdGen = new TaxiDomain(rf,tf);
 
-
-
         tdGen.setTransitionDynamicsLikeFickleTaxiProlem();
         tdGen.setFickleTaxi(true);
+        tdGen.setFickleProbability(1.0);
         tdGen.setIncludeFuel(false);
 
 
@@ -123,7 +128,7 @@ public class TaxiAMDPDriver {
                 startState = TaxiDomain.getComplexState(false);
             }
         }
-
+        //PolicyUtils.rollout(p, env)
 
         TerminalFunction tfL1 = new TaxiL1TerminalFunction();
         RewardFunction rfL1 = new UniformCostRF();
@@ -212,16 +217,20 @@ public class TaxiAMDPDriver {
         pgList.add(1,new l1PolicyGenerator(tdL1));
         pgList.add(2,new l2PolicyGenerator(tdL2));
 
-        AMDPAgent agent = new AMDPAgent(root.getApplicableGroundedTasks(sL2).get(0),pgList);
+        
+        AMDPMetaController meta;
+        //meta = new AMDPMetaController();
+        meta = new TaxiMetaController();
+		AMDPAgent agent = new AMDPAgent(root.getApplicableGroundedTasks(sL2).get(0),pgList, meta);
 
         SimulatedEnvironment envN = new SimulatedEnvironment(tdEnv, startState);
 
         Episode e = agent.actUntilTermination(envN,maxTrajectoryLength);
 
-//        Visualizer v = TaxiVisualizer.getVisualizer(5, 5);
-//        List<Episode> eaList = new ArrayList<Episode>();
-//        eaList.add(e);
-//        new EpisodeSequenceVisualizer(v, td, eaList);
+        Visualizer v = TaxiVisualizer.getVisualizer(5, 5);
+        List<Episode> eaList = new ArrayList<Episode>();
+        eaList.add(e);
+        new EpisodeSequenceVisualizer(v, td, eaList);
 
 
         int count = 0;

@@ -41,17 +41,20 @@ public class AMDPAgent{
 
 	protected StackObserver onlineStackObserver;
 	
-
-
+	AMDPMetaController meta;
 
 	public AMDPAgent(GroundedTask rootGroundedTask, List<AMDPPolicyGenerator> inputPolicyGenerators){
+		this(rootGroundedTask, inputPolicyGenerators, new AMDPMetaController());
+	}
 
+	public AMDPAgent(GroundedTask rootGroundedTask, List<AMDPPolicyGenerator> inputPolicyGenerators, AMDPMetaController meta){
+		
 		this.rootGroundedTask = rootGroundedTask;
 
 		this.actionToGroundedTaskMap.put(rootGroundedTask.action.actionName(), rootGroundedTask);
 		this.actionToDomainMap.put(rootGroundedTask.action.actionName(),rootGroundedTask.groundedDomain());
 
-
+		this.meta = meta;
 
 //		if(inputDomainList.size()!=inputPolicyGenerators.size()){
 //			System.err.print("The number of domains ("+ inputDomainList + "), is not equal to the number of policy generators(" + inputPolicyGenerators+")");
@@ -70,6 +73,8 @@ public class AMDPAgent{
 		for(int i = 0; i < PolicyGenerators.size(); i++){
 			this.policyStack.add(new ArrayList<Action>());
 		}
+		
+		meta.setStateStack(this.StateStack);
 	}
 
 	public List<List<Action>> getPolicyStack() {
@@ -152,13 +157,17 @@ public class AMDPAgent{
 					tempStr+="_"+a.hashCode();
 				}
 
-
+				System.out.println(a.actionName());
 				decompose(env, level - 1, actionToGroundedTaskMap.get(a.actionName() + tempStr + "_" + level), maxSteps, ea);
 				s = StateStack.get(level);
 			}
 		}
 		else{
-			while((!env.isInTerminalState() && !gt.terminalFunction().isTerminal(s) )&& (stepCount < maxSteps || maxSteps == -1)){
+			while(
+					!meta.replan(level) && 
+					(!env.isInTerminalState() && !gt.terminalFunction().isTerminal(s) ) && 
+					(stepCount < maxSteps || maxSteps == -1)
+				){
 				// this is a grounded action at the base level
 				Action ga = pi.action(s);
 				this.policyStack.get(level).add(ga);
@@ -166,6 +175,16 @@ public class AMDPAgent{
 					this.onlineStackObserver.updatePolicyStack(this.policyStack);
 				}
 				
+				System.out.println("Performing Action: " + ga.toString());
+				//System.out.println("Policy Stack:");
+				//int i = 0;
+				//for(List<Action> policy: policyStack) {
+				//	System.out.println("Policy "+i);
+				//	for(Action act: policy) {
+				//		System.out.println(act);
+				//	}
+				//	i++;
+				//}
 				EnvironmentOutcome eo = env.executeAction(ga);
 
 				String str = StringUtils.repeat("	", maxLevel - level);

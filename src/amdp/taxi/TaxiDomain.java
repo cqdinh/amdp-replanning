@@ -257,10 +257,16 @@ public class TaxiDomain implements DomainGenerator{
      * has taken one move action location TransitionDynamics[initialGoalLocation][finalGoalLocation].
      */
     public void setTransitionDynamicsLikeFickleTaxiProlem(){
-        moveTransitionDynamics = new double[][]{{0.8, 0., 0.1, 0.1},
-                {0., 0.8, 0.1, 0.1},
-                {0.1, 0.1, 0.8, 0.0},
-                {0.1, 0.1, 0., 0.8}};
+        moveTransitionDynamics = new double[][]{
+        	//{0.8, 0.0, 0.1, 0.1},
+        	//{0.0, 0.8, 0.1, 0.1},
+        	//{0.1, 0.1, 0.8, 0.0},
+        	//{0.1, 0.1, 0.0, 0.8}
+        	{1, 0, 0, 0},
+        	{0, 1, 0, 0},
+        	{0, 0, 1, 0},
+        	{0, 0, 0, 1}
+        };
 
         fickleLocationDynamics = new double[4][4];
         for(int i = 0; i < 4; i++){
@@ -273,6 +279,7 @@ public class TaxiDomain implements DomainGenerator{
                 }
             }
         }
+        //fickleLocationDynamics = moveTransitionDynamics;
     }
 
 
@@ -431,7 +438,9 @@ public class TaxiDomain implements DomainGenerator{
                                 for (int j = 0; j <locationChangeProbabilities.length;j++){
                                     State nns = ns.copy();
                                     TaxiPassenger passN = ((TaxiState)nns).touchPassenger(pass.name());
-                                    String newGoal = new String(((TaxiLocation) locations.get(j)).colour);
+                                    String newGoal = new String(((TaxiLocation) locations.get(
+                                    		(int)(Math.random() * locations.size())
+                                    		)).colour);
                                     passN.goalLocation = newGoal;
                                     passN.justPickedUp=false;
                                     transitions.add(new StateTransitionProb(nns,p*locationChangeProbabilities[j]));
@@ -577,7 +586,7 @@ public class TaxiDomain implements DomainGenerator{
         private boolean passengerMoved(State s, State ns, TaxiPassenger pass) {
             TaxiPassenger pOld = (TaxiPassenger)((TaxiState)s).object(pass.name());
             TaxiPassenger pNew = (TaxiPassenger)((TaxiState)ns).object(pass.name());
-            double distance = Math.abs(pOld.x - pNew.x) +Math.abs(pOld.y - pNew.y);
+            double distance = Math.abs(pOld.x - pNew.x) + Math.abs(pOld.y - pNew.y);
             return distance>0;
 
         }
