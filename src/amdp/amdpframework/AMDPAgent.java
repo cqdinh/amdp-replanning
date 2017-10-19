@@ -2,6 +2,7 @@ package amdp.amdpframework;
 
 import amdp.tools.StackObserver;
 import burlap.behavior.policy.Policy;
+import burlap.behavior.policy.PolicyUtils;
 import burlap.behavior.singleagent.Episode;
 import burlap.debugtools.DPrint;
 import burlap.mdp.core.Domain;
@@ -127,10 +128,11 @@ public class AMDPAgent{
 
 
 		Policy pi = PolicyGenerators.get(level).generatePolicy(s, gt);
+		//System.out.println(PolicyUtils.rollout(pi, env).actionString());
 		if(level !=0){
 
 
-			while(!gt.terminalFunction().isTerminal(s) && (stepCount < maxSteps || maxSteps == -1)){
+			while(!meta.replan(level) && !gt.terminalFunction().isTerminal(s) && (stepCount < maxSteps || maxSteps == -1)){
 				TaskNode[] childTaskNodes = ((NonPrimitiveTaskNode)gt.t).childTaskNodes;
 //					List<GroundedTask> childGroundedTaskList = gt.t.getApplicableGroundedTasks(s);
 
@@ -157,8 +159,9 @@ public class AMDPAgent{
 					tempStr+="_"+a.hashCode();
 				}
 
-				System.out.println(a.actionName());
+				meta.addTrajectory(a);
 				decompose(env, level - 1, actionToGroundedTaskMap.get(a.actionName() + tempStr + "_" + level), maxSteps, ea);
+				meta.removeTrajectory();
 				s = StateStack.get(level);
 			}
 		}
@@ -175,7 +178,8 @@ public class AMDPAgent{
 					this.onlineStackObserver.updatePolicyStack(this.policyStack);
 				}
 				
-				System.out.println("Performing Action: " + ga.toString());
+				System.out.println(meta.trajectoryString() + " -> " + ga.actionName());
+				//System.out.println("Performing Action: " + ga.toString());
 				//System.out.println("Policy Stack:");
 				//int i = 0;
 				//for(List<Action> policy: policyStack) {
