@@ -1,5 +1,5 @@
 # amdp
-Repo for AMDP research. 
+Repo for AMDP research. Forked from nakulgopalan/amdp
 
 The master branch is the latest DAG hierarchy code on `BURLAP 3.0`. The older functioning AMDP code is on `BURLAP 2.0` on the branch `amdpBurlap2.
 
